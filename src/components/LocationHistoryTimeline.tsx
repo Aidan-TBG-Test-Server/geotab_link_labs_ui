@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { format } from 'date-fns';
 import { LocationHistoryEntry } from '../lib/api';
 import { 
   formatLocalDateTime, 
@@ -98,9 +99,9 @@ const LocationHistoryTimeline: React.FC<LocationHistoryTimelineProps> = ({
       <div className="divide-y divide-gray-200 max-h-[500px] overflow-y-auto">
         {sortedDays.map(day => {
           const entries = groupedByDay[day];
-          const formattedDate = formatDay(day);
+          const formattedDate = formatDay(day + "T00:00:00");
           const isExpanded = expandedDays[day] !== false; // Default to expanded
-          
+
           return (
             <div key={day} className="bg-white">
               <button

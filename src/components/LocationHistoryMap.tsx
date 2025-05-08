@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
+import React, { useState, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap, LayersControl } from 'react-leaflet';
 import { LatLngTuple, LatLngExpression, DivIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Clock, Navigation, MapPin, Wifi, Signal } from 'lucide-react';
@@ -111,6 +111,12 @@ const getIconForLocationType = (locationType?: string, isFirst: boolean = false,
 };
 
 const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, selectedLocation }) => {
+  // Change the map type
+  const [mapType, setMapType] = useState<'street' | 'terrain' | 'satellite'>(() => {
+    const savedMapType = localStorage.getItem('mapType');
+    return (savedMapType as 'street' | 'terrain' | 'satellite') || 'street';
+  });
+  
   // Sort data by timestamp in descending order (newest first)
   const sortedData = [...historyData].sort((a, b) => 
     new Date(b.time).getTime() - new Date(a.time).getTime()
@@ -149,10 +155,31 @@ const LocationHistoryMap: React.FC<LocationHistoryMapProps> = ({ historyData, se
         zoomControl={false}
         key={`map-${validLocations.length}-${selectedLocation?.time || 'none'}`} // Force re-render when data changes
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+
+        <LayersControl position="topright" className="ll_leaflet-control-layers">
+          <LayersControl.BaseLayer checked={mapType === 'street'} name="Street">
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+          </LayersControl.BaseLayer>
+
+          <LayersControl.BaseLayer checked={mapType === 'terrain'} name="Terrain">
+            <TileLayer
+              attribution='Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)'
+              url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+              maxZoom={17}
+            />
+          </LayersControl.BaseLayer>
+
+          <LayersControl.BaseLayer checked={mapType === 'satellite'} name="Satellite">
+            <TileLayer
+              attribution='Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              maxZoom={19}
+            />
+          </LayersControl.BaseLayer>
+        </LayersControl>
         
         <MapUpdater historyData={validLocations} selectedLocation={selectedLocation} />
         
